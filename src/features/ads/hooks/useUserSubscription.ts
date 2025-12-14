@@ -3,8 +3,9 @@
 import { useSession } from "@/features/auth/lib/auth-client";
 
 export function useUserSubscription() {
-  const { data: session, ...rest } = useSession();
-  const isPremium = session?.user?.isPremium || false;
+  const { ...rest } = useSession();
+  // Premium unlocked for self-hosted instance
+  const isPremium = true;
 
   return { isPremium, ...rest };
 }

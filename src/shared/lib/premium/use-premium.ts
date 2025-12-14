@@ -12,16 +12,8 @@ export function usePremiumStatus() {
   return useQuery({
     queryKey: ["premium-status", session?.user?.id],
     queryFn: async (): Promise<PremiumStatus> => {
-      if (!session?.user?.id) {
-        return { isPremium: false };
-      }
-
-      const response = await fetch("/api/premium/status");
-      if (!response.ok) {
-        throw new Error("Failed to fetch premium status");
-      }
-
-      return response.json();
+      // Premium unlocked for self-hosted instance
+      return { isPremium: true };
     },
     enabled: !!session?.user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -35,16 +27,8 @@ export function useSubscription() {
   return useQuery({
     queryKey: ["subscription", session?.user?.id],
     queryFn: async (): Promise<UserSubscription> => {
-      if (!session?.user?.id) {
-        return { isActive: false };
-      }
-
-      const response = await fetch("/api/premium/subscription");
-      if (!response.ok) {
-        throw new Error("Failed to fetch subscription");
-      }
-
-      return response.json();
+      // Premium unlocked for self-hosted instance
+      return { isActive: true };
     },
     enabled: !!session?.user?.id,
     staleTime: 5 * 60 * 1000,
@@ -54,6 +38,6 @@ export function useSubscription() {
 
 // Simple boolean check - most common use case
 export function useIsPremium(): boolean {
-  const { data: premiumStatus } = usePremiumStatus();
-  return premiumStatus?.isPremium ?? false;
+  // Premium unlocked for self-hosted instance
+  return true;
 }
