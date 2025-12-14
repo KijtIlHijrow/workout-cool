@@ -13,6 +13,7 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "import:exercises-full": "tsx scripts/import-exercises-with-attributes.ts",
+    "import:free-exercise-db": "tsx scripts/import-free-exercise-db.ts",
     "db:seed": "pnpm run import:exercises-full ./data/sample-exercises.csv",
     "db:seed-plans": "tsx scripts/seed-subscription-plans-simple.ts",
     "db:seed-workout-advanced": "tsx scripts/seed-workout-data-advanced.ts",
