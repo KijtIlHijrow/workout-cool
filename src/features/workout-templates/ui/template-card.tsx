@@ -127,7 +127,10 @@ export function TemplateCard({ template, onStart, onEdit, onDelete }: TemplateCa
           <div className="flex flex-wrap gap-1 mt-3">
             {template.muscles.slice(0, 3).map((muscle) => (
               <Badge className="text-xs" key={muscle} variant="outline">
-                {muscle.replace(/_/g, " ").toLowerCase()}
+                {muscle
+                  .replace(/_/g, " ")
+                  .toLowerCase()
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
               </Badge>
             ))}
             {template.muscles.length > 3 && (
