@@ -223,7 +223,7 @@ export function ExerciseQuickSearch({ onExerciseAdded }: ExerciseQuickSearchProp
                         <h4 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {exercise.nameEn || exercise.name}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                           {getMuscleFromExercise(exercise).replace(/_/g, " ").toLowerCase()}
                         </p>
                       </div>
