@@ -2838,8 +2838,8 @@
     "id": "Butt_Lift_Bridge"
   },
   {
-    "name": "Butterfly",
-    "force": "pull",
+    "name": "Machine Chest Fly",
+    "force": "push",
     "level": "beginner",
     "mechanic": "isolation",
     "equipment": "machine",
@@ -2859,7 +2859,7 @@
       "Butterfly/0.jpg",
       "Butterfly/1.jpg"
     ],
-    "id": "Butterfly"
+    "id": "Machine_Chest_Fly"
   },
   {
     "name": "Cable Chest Press",
