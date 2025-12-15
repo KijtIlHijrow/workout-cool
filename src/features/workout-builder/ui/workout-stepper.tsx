@@ -12,16 +12,15 @@ import Trophy from "@public/images/trophy.png";
 import useBoolean from "@/shared/hooks/useBoolean";
 import { TemplateList } from "@/features/workout-templates/ui/template-list";
 import { SaveTemplateModal } from "@/features/workout-templates/ui/save-template-modal";
+import { updateTemplate } from "@/features/workout-templates/actions/update-template.action";
 import { getTemplates, WorkoutTemplateWithExercises } from "@/features/workout-templates/actions/get-templates.action";
 import { deleteTemplate } from "@/features/workout-templates/actions/delete-template.action";
 import { createTemplate } from "@/features/workout-templates/actions/create-template.action";
-import { updateTemplate } from "@/features/workout-templates/actions/update-template.action";
 import { WorkoutSessionSets } from "@/features/workout-session/ui/workout-session-sets";
 import { WorkoutSessionHeader } from "@/features/workout-session/ui/workout-session-header";
 import { WorkoutBuilderFooter } from "@/features/workout-builder/ui/workout-stepper-footer";
 import { env } from "@/env";
 import { Button } from "@/components/ui/button";
-import { NutripureAffiliateBanner } from "@/components/ads/nutripure-affiliate-banner";
 import { HorizontalTopBanner } from "@/components/ads";
 
 import { StepperStepProps } from "../types";
@@ -34,6 +33,22 @@ import { EquipmentSelection } from "./equipment-selection";
 import { AddExerciseModal } from "./add-exercise-modal";
 
 import type { ExerciseWithAttributes, WorkoutBuilderStep } from "../types";
+
+// Helper to extract attribute name from union type (can be enum string or object with .name)
+const getAttributeName = (attr: { attributeName: unknown }): string => {
+  const name = attr.attributeName;
+  if (typeof name === "string") return name;
+  if (name && typeof name === "object" && "name" in name) return String(name.name);
+  return "";
+};
+
+// Helper to extract attribute value from union type (can be enum string or object with .value)
+const getAttributeValue = (attr: { attributeValue: unknown }): string => {
+  const value = attr.attributeValue;
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "value" in value) return String(value.value);
+  return "";
+};
 
 export function WorkoutStepper() {
   const { loadSessionFromLocal } = useWorkoutSession();
@@ -210,9 +225,9 @@ export function WorkoutStepper() {
       const exercise = te.exercise as ExerciseWithAttributes;
       // Find the muscle attribute for this exercise
       const muscleAttribute = exercise.attributes?.find(
-        (attr) => attr.attributeName?.name === "PRIMARY_MUSCLE"
+        (attr) => getAttributeName(attr) === "PRIMARY_MUSCLE"
       );
-      const muscle = muscleAttribute?.attributeValue?.value as ExerciseAttributeValueEnum;
+      const muscle = muscleAttribute ? getAttributeValue(muscleAttribute) as ExerciseAttributeValueEnum : undefined;
 
       if (muscle) {
         const existing = exercisesByMuscleMap.get(muscle) || [];
@@ -262,6 +277,18 @@ export function WorkoutStepper() {
   const handleSaveTemplate = useCallback(async (name: string) => {
     setIsSavingTemplate(true);
     try {
+      // Derive muscles from actual exercises' PRIMARY_MUSCLE attributes
+      const derivedMuscles = [
+        ...new Set(
+          orderedExercises
+            .map((ex) => {
+              const muscleAttr = ex.attributes?.find((attr) => getAttributeName(attr) === "PRIMARY_MUSCLE");
+              return muscleAttr ? getAttributeValue(muscleAttr) as ExerciseAttributeValueEnum : undefined;
+            })
+            .filter((muscle): muscle is ExerciseAttributeValueEnum => muscle !== undefined)
+        ),
+      ];
+
       const exerciseData = orderedExercises.map((ex, index) => ({
         exerciseId: ex.id,
         order: index,
@@ -273,7 +300,7 @@ export function WorkoutStepper() {
           id: editingTemplateId,
           name,
           equipment: selectedEquipment,
-          muscles: selectedMuscles,
+          muscles: derivedMuscles,
           exercises: exerciseData,
         });
 
@@ -289,7 +316,7 @@ export function WorkoutStepper() {
         const newTemplate = await createTemplate({
           name,
           equipment: selectedEquipment,
-          muscles: selectedMuscles,
+          muscles: derivedMuscles,
           exercises: exerciseData,
         });
 
@@ -304,7 +331,7 @@ export function WorkoutStepper() {
     } finally {
       setIsSavingTemplate(false);
     }
-  }, [orderedExercises, selectedEquipment, selectedMuscles, saveTemplateModal, t, editingTemplateId]);
+  }, [orderedExercises, selectedEquipment, saveTemplateModal, t, editingTemplateId]);
 
   const handleToggleEquipment = (equipment: ExerciseAttributeValueEnum) => {
     toggleEquipment(equipment);
@@ -490,7 +517,7 @@ export function WorkoutStepper() {
         <StepperHeader currentStep={currentStep} onStepClick={handleStepClick} steps={steps} />
       )}
 
-      <div className={`px-2 sm:px-6 ${editingTemplateId ? 'pt-6' : ''}`}>{renderStepContent()}</div>
+      <div className={`px-2 sm:px-6 ${editingTemplateId ? "pt-6" : ""}`}>{renderStepContent()}</div>
 
       <WorkoutBuilderFooter
         canContinue={canContinue}
