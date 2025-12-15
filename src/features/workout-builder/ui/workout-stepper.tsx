@@ -61,6 +61,7 @@ export function WorkoutStepper() {
     shufflingExerciseId,
     goToStep,
     deleteExercise,
+    loadFromSession,
   } = useWorkoutStepper();
   const locale = useCurrentLocale();
   useEffect(() => {
@@ -194,9 +195,43 @@ export function WorkoutStepper() {
   }, [startWorkout]);
 
   const handleEditTemplate = useCallback((template: WorkoutTemplateWithExercises) => {
-    // TODO: Implement edit flow - for now, just log
-    console.log("Edit template:", template.id);
-  }, []);
+    // Group exercises by muscle for the stepper format
+    const exercisesByMuscleMap = new Map<ExerciseAttributeValueEnum, ExerciseWithAttributes[]>();
+
+    template.exercises.forEach((te) => {
+      const exercise = te.exercise as ExerciseWithAttributes;
+      // Find the muscle attribute for this exercise
+      const muscleAttribute = exercise.attributes?.find(
+        (attr) => attr.attributeName?.name === "PRIMARY_MUSCLE"
+      );
+      const muscle = muscleAttribute?.attributeValue?.value as ExerciseAttributeValueEnum;
+
+      if (muscle) {
+        const existing = exercisesByMuscleMap.get(muscle) || [];
+        exercisesByMuscleMap.set(muscle, [...existing, exercise]);
+      }
+    });
+
+    // Convert map to array format expected by loadFromSession
+    const exercisesByMuscle = Array.from(exercisesByMuscleMap.entries()).map(([muscle, exercises]) => ({
+      muscle,
+      exercises,
+    }));
+
+    // Get exercise order from template
+    const exercisesOrder = template.exercises.map((te) => te.exercise.id);
+
+    // Load into the stepper
+    loadFromSession({
+      equipment: template.equipment as ExerciseAttributeValueEnum[],
+      muscles: template.muscles as ExerciseAttributeValueEnum[],
+      exercisesByMuscle,
+      exercisesOrder,
+    });
+
+    // Hide template selection to show the stepper
+    setShowTemplateSelection(false);
+  }, [loadFromSession]);
 
   const handleDeleteTemplate = useCallback(async (template: WorkoutTemplateWithExercises) => {
     if (!window.confirm(t("workout_templates.delete_confirm"))) return;
